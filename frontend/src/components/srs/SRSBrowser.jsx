@@ -15,19 +15,22 @@ const SORT_OPTIONS = [
 ];
 
 // Dual-handle range slider component
-function RangeFilter({ label, min, max, value, onChange }) {
+function RangeFilter({ label, min, max, value, onChange, step = 1 }) {
   const [minVal, maxVal] = value;
 
   // Calculate percentages for the filled track
   const minPercent = ((minVal - min) / (max - min)) * 100;
   const maxPercent = ((maxVal - min) / (max - min)) * 100;
 
+  // Format display value (show decimals only if step < 1)
+  const formatVal = (v) => step < 1 ? v.toFixed(1) : v;
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <label className="text-sm text-gray-400">{label}</label>
         <span className="text-xs text-gray-500">
-          {minVal === min && maxVal === max ? 'Any' : `${minVal} - ${maxVal}`}
+          {minVal === min && maxVal === max ? 'Any' : `${formatVal(minVal)} - ${formatVal(maxVal)}`}
         </span>
       </div>
       <div className="relative h-6 flex items-center">
@@ -46,9 +49,10 @@ function RangeFilter({ label, min, max, value, onChange }) {
           type="range"
           min={min}
           max={max}
+          step={step}
           value={minVal}
           onChange={(e) => {
-            const newMin = Math.min(parseInt(e.target.value), maxVal - 1);
+            const newMin = Math.min(parseFloat(e.target.value), maxVal - step);
             onChange([newMin, maxVal]);
           }}
           className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500"
@@ -59,9 +63,10 @@ function RangeFilter({ label, min, max, value, onChange }) {
           type="range"
           min={min}
           max={max}
+          step={step}
           value={maxVal}
           onChange={(e) => {
-            const newMax = Math.max(parseInt(e.target.value), minVal + 1);
+            const newMax = Math.max(parseFloat(e.target.value), minVal + step);
             onChange([minVal, newMax]);
           }}
           className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500"
@@ -76,6 +81,7 @@ function RangeFilter({ label, min, max, value, onChange }) {
 }
 
 // Default filter ranges
+const DEFAULT_TIME = [0, 15];
 const DEFAULT_CROSS = [0, 20];
 const DEFAULT_PAIR = [0, 25];
 
@@ -86,7 +92,8 @@ export function SRSBrowser({ onAdd }) {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     solver: '',
-    maxResult: '',
+    // Time filter [min, max] in seconds
+    time: DEFAULT_TIME,
     // Move count filters [min, max]
     crossMoves: DEFAULT_CROSS,
     pair1Moves: DEFAULT_PAIR,
@@ -104,6 +111,7 @@ export function SRSBrowser({ onAdd }) {
 
   // Check if any filter is active (not at default)
   const hasActiveFilters =
+    filters.time[0] !== DEFAULT_TIME[0] || filters.time[1] !== DEFAULT_TIME[1] ||
     filters.crossMoves[0] !== DEFAULT_CROSS[0] || filters.crossMoves[1] !== DEFAULT_CROSS[1] ||
     filters.pair1Moves[0] !== DEFAULT_PAIR[0] || filters.pair1Moves[1] !== DEFAULT_PAIR[1] ||
     filters.pair2Moves[0] !== DEFAULT_PAIR[0] || filters.pair2Moves[1] !== DEFAULT_PAIR[1] ||
@@ -114,12 +122,14 @@ export function SRSBrowser({ onAdd }) {
     try {
       const apiFilters = {
         solver: filters.solver || undefined,
-        maxResult: filters.maxResult || undefined,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
         limit: filters.limit,
         offset: filters.offset,
-        // Always send move filters
+        // Time filter
+        minResult: filters.time[0],
+        maxResult: filters.time[1],
+        // Move count filters
         minCross: filters.crossMoves[0],
         maxCross: filters.crossMoves[1],
         minPair1: filters.pair1Moves[0],
@@ -195,6 +205,7 @@ export function SRSBrowser({ onAdd }) {
   const resetFilters = () => {
     setFilters(prev => ({
       ...prev,
+      time: DEFAULT_TIME,
       crossMoves: DEFAULT_CROSS,
       pair1Moves: DEFAULT_PAIR,
       pair2Moves: DEFAULT_PAIR,
@@ -230,17 +241,6 @@ export function SRSBrowser({ onAdd }) {
               value={filters.solver}
               onChange={(e) => setFilters(prev => ({ ...prev, solver: e.target.value }))}
               placeholder="Search by solver name..."
-              className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="w-28">
-            <label className="block text-sm text-gray-400 mb-1">Max time</label>
-            <input
-              type="number"
-              step="0.01"
-              value={filters.maxResult}
-              onChange={(e) => setFilters(prev => ({ ...prev, maxResult: e.target.value }))}
-              placeholder="e.g. 5.0"
               className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -289,9 +289,20 @@ export function SRSBrowser({ onAdd }) {
           </button>
         </div>
 
-        {/* Move count filters */}
+        {/* Filters */}
         {showFilters && (
           <div className="border-t border-gray-700 pt-4 space-y-6">
+            {/* Time filter - full width */}
+            <RangeFilter
+              label="Time (seconds)"
+              min={0}
+              max={15}
+              value={filters.time}
+              onChange={(val) => setFilters(prev => ({ ...prev, time: val, offset: 0 }))}
+              step={0.5}
+            />
+
+            {/* Move count filters - 2 columns */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-8">
               <RangeFilter
                 label="Cross"
