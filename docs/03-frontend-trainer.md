@@ -14,7 +14,7 @@ Build the main training interface where the user practices cross planning. This 
 ## Project Structure
 
 ```
-speedcubedb-scrambles/
+cubing-practice/
 ├── frontend/
 │   ├── src/
 │   │   ├── main.jsx

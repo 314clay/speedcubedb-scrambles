@@ -8,7 +8,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/Users/clayarnold/.nvm/versions/node/v20.19.5/bin/node</string>
-        <string>/Users/clayarnold/Documents/GitHub/speedcubedb-scrambles/scripts/zbll-scraper/server.js</string>
+        <string>/Users/clayarnold/Documents/GitHub/cubing-practice/scripts/zbll-scraper/server.js</string>
     </array>
 
     <key>RunAtLoad</key>
@@ -24,6 +24,6 @@
     <string>/tmp/zbll-stats-server.error.log</string>
 
     <key>WorkingDirectory</key>
-    <string>/Users/clayarnold/Documents/GitHub/speedcubedb-scrambles/scripts/zbll-scraper</string>
+    <string>/Users/clayarnold/Documents/GitHub/cubing-practice/scripts/zbll-scraper</string>
 </dict>
 </plist>

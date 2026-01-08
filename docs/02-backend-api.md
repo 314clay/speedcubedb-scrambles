@@ -14,7 +14,7 @@ Create a Node.js/Express API that serves scrambles and records practice attempts
 ## Project Structure
 
 ```
-speedcubedb-scrambles/
+cubing-practice/
 ├── server/
 │   ├── index.js          # Express app entry point
 │   ├── db.js             # Database connection pool

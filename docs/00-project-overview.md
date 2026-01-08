@@ -62,7 +62,7 @@ Run these prompts in order:
 ## Directory Structure (Final)
 
 ```
-speedcubedb-scrambles/
+cubing-practice/
 ├── docs/                    # Implementation prompts
 ├── server/                  # Express.js backend
 │   ├── index.js
